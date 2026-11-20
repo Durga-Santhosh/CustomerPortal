@@ -1,28 +1,26 @@
 
 # Stage 1: Build Spring Boot application
-FROM eclipse-temurin:25-jdk AS build
+FROM maven:3.9-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-# Copy Maven project files
-COPY . .
+# Copy project files
+COPY pom.xml .
+COPY src ./src
 
-# Make Maven wrapper executable
-RUN chmod +x mvnw
-
-# Build executable JAR
-RUN ./mvnw clean package -DskipTests
+# Build JAR using Maven
+RUN mvn clean package -DskipTests
 
 # Stage 2: Run Spring Boot application
-FROM eclipse-temurin:25-jre
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
-# Copy generated JAR
-COPY --from=build /app/target/customer-0.0.1-SNAPSHOT.jar app.jar
+# Copy generated JAR file
+COPY --from=build /app/target/*.jar app.jar
 
-# Application port
-EXPOSE 7070
+# Render application port
+EXPOSE 8080
 
-# Start application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Start Spring Boot
+CMD ["java", "-jar", "app.jar"]
